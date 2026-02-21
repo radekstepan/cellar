@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Check the status of the Docker container
+
+# Go to the root of the project
+cd "$(dirname "$0")/.."
+
+if curl -s http://localhost:3001/api/schema >/dev/null; then
+  echo "STATUS: RUNNING"
+  echo "The application is currently active at http://localhost:3001"
+else
+  echo "STATUS: STOPPED"
+  echo "The container or server is not currently responding."
+fi

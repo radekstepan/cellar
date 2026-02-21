@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Stop the Docker container
+
+# Go to the root of the project
+cd "$(dirname "$0")/.."
+
+echo "Stopping the application..."
+docker-compose down --remove-orphans
+
+echo "SUCCESS: Container successfully stopped."
+echo "STATUS: STOPPED"

@@ -7,9 +7,10 @@ Support an architecture where an OpenClaw agent operates within a Docker contain
 
 ### 1. Docker & Container Orchestration
 The primary piece needed to get OpenClaw running in a controlled containerized environment referencing local files.
-- [ ] Create a `Dockerfile`: Needs to bundle the Node backend, frontend statics, and any OS-level dependencies the agent requires.
-- [ ] Create `docker-compose.yml`: Must include volume mounting for `data/records/` and `schema.json` so the agent interacts with the exact same files the human sees on the host machine.
-- [ ] Document Docker startup commands (`docker-compose up -d`) to ensure proper mapping and permissions.
+- [x] Create a `Dockerfile`: Needs to bundle the Node backend, frontend statics, and any OS-level dependencies the agent requires.
+- [x] Create `docker-compose.yml`: Must include volume mounting for `data/records/` and `schema.json` so the agent interacts with the exact same files the human sees on the host machine.
+- [x] Document Docker startup commands (`docker-compose up -d`) to ensure proper mapping and permissions.
+  - *Startup command:* Run `docker-compose up -d --build` from the project root.
 
 ### 2. The Agent Interface (CLI vs API)
 The interface through which OpenClaw actually interacts with the "spreadsheet" state. Right now, only basic CRUD via HTTP API is implemented in `apps/server/index.js`, without agent-friendly affordances.

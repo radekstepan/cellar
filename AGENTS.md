@@ -19,7 +19,7 @@ The "rows" of the spreadsheet are individual JSON files in `data/records/`.
 - **Real-time Sync**: You don't need to touch the UI code. The Express server watches this folder and will broadcast your changes to the user's browser via WebSockets instantly.
 
 ### 3. Use the API (Optional)
-While you can manipulate files directly, you can also use the local Express server on `http://localhost:3001`:
+While you can manipulate files directly, you can also use the local Express server on `http://localhost:3001` (either running locally or via Docker):
 - `GET /api/schema`: Get current configuration.
 - `GET /api/records`: List all records.
 - `POST /api/records`: Create a new record.

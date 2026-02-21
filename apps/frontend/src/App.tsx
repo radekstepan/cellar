@@ -29,7 +29,9 @@ export function App() {
         }).catch(err => console.error('Failed to load initial data:', err));
 
         // Setup WebSocket for live updates
-        const ws = new WebSocket(`ws://localhost:3001`);
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = process.env.NODE_ENV === 'development' ? `ws://localhost:3001` : `${wsProtocol}//${window.location.host}`;
+        const ws = new WebSocket(wsUrl);
         ws.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);

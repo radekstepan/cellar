@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Rebuild and start the Docker container
+
+# Go to the root of the project
+cd "$(dirname "$0")/.."
+
+echo "Rebuilding and starting the application..."
+docker-compose up -d --build --remove-orphans
+
+echo "Waiting for server to respond..."
+for i in {1..5}; do
+  if curl -s http://localhost:3001/api/schema >/dev/null; then
+    echo "SUCCESS: Container successfully rebuilt and started."
+    echo "STATUS: RUNNING"
+    echo "Application and API are available at http://localhost:3001"
+    exit 0
+  fi
+  sleep 1
+done
+
+echo "ERROR: Failed to start the container after rebuilding or server isn't responding."
+echo "STATUS: STOPPED"
+exit 1

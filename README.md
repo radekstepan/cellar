@@ -13,21 +13,43 @@ A **Local-First, JSON-backed, Git-synced** outreach management system. This app 
 
 ## 🚀 Getting Started
 
-To run the full system, you need to start both the backend server (to handle file I/O) and the frontend dev server.
+You can run the system using Docker (recommended) or manually by starting the backend and frontend dev servers separately.
 
-### 1. Install Dependencies
+### Using Docker (Recommended)
+
+The easiest way to get the system running is using Docker Compose, which handles building the frontend and running the server automatically. We provide convenience scripts in the `bin/` folder for this:
+
+```bash
+# To build and start the system (best for first run or after changes):
+./bin/rebuild
+
+# To start the system without rebuilding:
+./bin/start
+
+# To stop the system:
+./bin/stop
+
+# To check if the system is running:
+./bin/status
+```
+
+*The application and API are available at `http://localhost:3001`*
+
+### Running Manually
+
+#### 1. Install Dependencies
 ```bash
 yarn install
 ```
 
-### 2. Start Backend Server
+#### 2. Start Backend Server
 The server handles reading/writing JSON files and broadcasts changes via WebSockets.
 ```bash
-node server/index.js
+yarn workspace server start
 ```
 *Server runs on `http://localhost:3001`*
 
-### 3. Start Frontend
+#### 3. Start Frontend
 ```bash
 yarn dev
 ```

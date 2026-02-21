@@ -155,3 +155,15 @@ watcher.on('all', async (event, filePath) => {
 });
 
 console.log(`Watching for file changes in ${RECORDS_DIR}`);
+
+// --- Serve Frontend Statics ---
+const FRONTEND_DIST = path.join(__dirname, '..', 'frontend', 'dist');
+app.use(express.static(FRONTEND_DIST));
+
+// Catch-all route to serve the SPA (excluding /api routes which are handled above)
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+    res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
+});
