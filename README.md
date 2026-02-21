@@ -1,134 +1,68 @@
-# Lumina Core
+# Outreach Pipeline
 
-![Lumina Core Screenshot](./screenshot.png)
+![Outreach Pipeline Screenshot](./screenshot.png)
 
-Baseline frontend component library for future projects.
+A **Local-First, JSON-backed, Git-synced** outreach management system. This app acts as a headless CMS for AI agents, presented as a high-performance spreadsheet.
 
-## Features
+## 🏗️ Architecture
 
-- **TypeScript** - Full type safety
-- **Tailwind CSS** - Utility-first styling
-- **React 18** - Modern React patterns
-- **Vite** - Fast build tool
-- **Vitest** - Testing framework
-- **Lucide Icons** - Beautiful & consistent iconography
+- **Local-First**: Complete data ownership. No cloud database required.
+- **JSON-backed**: Each record is a separate, beautifully indented JSON file in `data/records/`. This makes Git diffs clean and merge conflicts rare.
+- **Git-sycned**: Your audit history and version control are handled by regular Git commits.
+- **WebSocket Sync**: The UI live-updates instantly when local files are changed (by you or an AI agent) via a built-in file watcher.
 
-## Components Included
+## 🚀 Getting Started
 
-Lumina Core comes with a variety of pre-built components:
-- **Layout**: `SectionHeader`, `TableRow`, `NodeCard`
-- **Data Visualization**: `MiniChart`, `MetricBar`, `StatWidget`
-- **Feedback**: `Badge`, `StatusCard`, `NotificationItem`, `Tooltip`
-- **UI Elements**: `Avatar`, `Skeleton`, `Kbd`, `NavIcon`, `ProfileMenuItem`
+To run the full system, you need to start both the backend server (to handle file I/O) and the frontend dev server.
 
-## Prerequisites
-
-- **Node.js**: v24.13.0 or later (see [.nvmrc](.nvmrc))
-- **Package Manager**: [Yarn](https://yarnpkg.com/) (recommended)
-
-## Getting Started
-
+### 1. Install Dependencies
 ```bash
-# Install dependencies
 yarn install
+```
 
-# Start development server
+### 2. Start Backend Server
+The server handles reading/writing JSON files and broadcasts changes via WebSockets.
+```bash
+node server/index.js
+```
+*Server runs on `http://localhost:3001`*
+
+### 3. Start Frontend
+```bash
 yarn dev
-
-# Build for production
-yarn build
-
-# Run tests
-yarn test
-
-# Lint code
-yarn lint
-
-# Format code
-yarn format
 ```
+*Frontend runs on `http://localhost:5173` (requests to `/api` are automatically proxied to the backend).*
 
-### (Optional) Infisical Setup
+## 📁 Project Structure
 
-For secure secret management using Infisical:
-
-a. Install Infisical CLI:
-```bash
-# macOS
-brew install infisical/get-cli/infisical
-```
-
-b. Update `infisical.json` with your workspace ID.
-
-c. Secrets will be automatically injected into `process.env` when running via Infisical. If Infisical is not used, the project falls back to reading from a local `.env` file via `dotenv`.
-
-## Usage Example
-
-```tsx
-import { StatWidget, Badge } from './components';
-
-export const MyComponent = () => (
-  <StatWidget 
-    title="Total Users" 
-    value="1,234" 
-    change="+12%" 
-    icon={<Badge variant="success">Active</Badge>} 
-  />
-);
-```
-
-## Project Structure
-
-```
-lumina-core/
-├── bin/               # CLI bootstrap tools
+```text
+pipeline/
+├── data/
+│   ├── schema.json       # Defines your columns and pipeline rules
+│   └── records/          # Folder-as-a-Table (one JSON file per row)
+├── server/
+│   └── index.js          # Express server with file watcher & WebSockets
 ├── src/
-│   ├── components/    # Reusable UI components
-│   ├── sections/      # Application layout sections
-│   ├── utils/         # Utility functions
-│   ├── App.tsx        # Main application component
-│   ├── main.tsx       # Entry point
-│   └── index.css      # Global styles
+│   ├── components/       # React UI components
+│   ├── App.tsx           # Main application logic & data fetching
+│   └── main.tsx          # Entry point
 ├── package.json
-├── tsconfig.json
-├── vite.config.ts
-└── tailwind.config.js
+└── vite.config.ts        # Includes proxy configuration
 ```
 
-## Adding Components
+## 🛠️ Tech Stack
 
-1. Create component file in `src/components/`
-2. Export from `src/components/index.ts`
-3. Add tests in `src/components/__tests__/`
+- **Frontend**: React 18, Tailwind CSS, Lucide Icons, Vite.
+- **Backend**: Node.js, Express, Chokidar (file watching), WS (WebSockets).
+- **Storage**: Flat-file JSON (Git-friendly).
 
-## Creating a New Project
+## 🤖 AI Agent Integration
 
-Use this template to create a new project:
-
-```bash
-npx radekstepan/lumina-core --name="My Project" --dir="./my-app"
-```
-
-This creates a new project with:
-- Package name: `my-app`
-- Display name: `My Project`
-- All template files copied and updated
-
-## Styling & Customization
-
-Lumina Core uses **Tailwind CSS** with a custom theme:
-- **Fonts**: `Inter` for sans-serif, `JetBrains Mono` for code.
-- **Colors**: Custom `violet` palette as the primary accent.
-- **Animations**: Includes `fadeIn`, `slideUp`, and `shimmer` utility classes.
-
-See [tailwind.config.js](tailwind.config.js) for the full theme configuration.
-
-## Deployment
-
-The project is configured for easy deployment to **Netlify**:
-- Configuration: [netlify.toml](netlify.toml)
-- Build Command: `yarn build`
-- Publish Directory: `dist`
+This app is designed to be co-piloted by AI agents. Agents can:
+1. Read the project context from `AGENTS.md`.
+2. Understand the table structure from `data/schema.json`.
+3. Directly manipulate data by creating/editing files in `data/records/`.
+4. The UI will instantly reflect these changes for the human user.
 
 ## License
 

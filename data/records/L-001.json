@@ -1,0 +1,8 @@
+{
+    "id": "L-001",
+    "target": "Acme Corp",
+    "status": "Ready",
+    "research_data": "CEO: Jane Doe. Focus: Sustainability.",
+    "draft_email": "Hi Jane...",
+    "isLive": false
+}

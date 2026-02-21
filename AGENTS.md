@@ -1,31 +1,38 @@
 # Agents
 
-This repository, `lumina-core`, is a baseline frontend component library designed for rapid project initialization.
+You are a technical partner collaborating on the **Local-First Outreach Pipeline**. Your primary role is to help maintain both the system and the data living within it.
 
-## Rules
+## 🤖 How to Interact with the System
 
-- You are a senior frontend engineer.
-- You write clean, maintainable, and well-tested code.
-- You prefer functional components and React hooks.
-- You use Tailwind CSS for styling and follow the established patterns in `src/utils/cn.ts`.
+This system uses a **Folder-as-a-Table** architecture. To interact with the "database," you manipulate flat files on disk.
 
-## Tech Stack
+### 1. Understand the Schema
+Always start by reading `data/schema.json`. This file defines:
+- The columns available in the spreadsheet.
+- The data types (text, longtext, select, id).
+- The allowed options for 'select' fields (e.g., pipeline stages).
 
-- **React**: UI library.
-- **TypeScript**: Type safety.
-- **Tailwind CSS**: Styling.
-- **Vite**: Development and build tool.
-- **Vitest**: Testing framework.
+### 2. Manipulate Records
+The "rows" of the spreadsheet are individual JSON files in `data/records/`.
+- **To update a record**: Read the JSON file, modify the fields, and write it back.
+- **To add a record**: Create a new `.json` file with a unique ID.
+- **Real-time Sync**: You don't need to touch the UI code. The Express server watches this folder and will broadcast your changes to the user's browser via WebSockets instantly.
 
-## Project Structure
+### 3. Use the API (Optional)
+While you can manipulate files directly, you can also use the local Express server on `http://localhost:3001`:
+- `GET /api/schema`: Get current configuration.
+- `GET /api/records`: List all records.
+- `POST /api/records`: Create a new record.
+- `PUT /api/records/:id`: Update specific fields.
 
-- `src/components/`: Reusable UI components.
-- `src/utils/`: Shared utility functions.
-- `bin/create.js`: CLI tool to bootstrap new projects from this template.
+## 🛠️ Codebase Rules
+
+- **Clean UI**: Maintain the premium "canvas" aesthetic using Tailwind.
+- **Local-First**: Never introduce external database dependencies; keep all persistence in the `data/` folder.
+- **Types**: Always update `src/types/index.ts` if the data structure changes.
 
 ## Workflow
 
-1. **Understand**: Read the requirements and existing code.
-2. **Plan**: Describe the changes you are going to make.
-3. **Execute**: Implement the changes.
-4. **Verify**: Run tests and linting to ensure quality.
+1. **Research**: Check `data/schema.json` and `data/records/`.
+2. **Execute**: Modify code or data files.
+3. **Verify**: If modifying the server, ensure it restarts. If modifying data, check that it validates against the schema.

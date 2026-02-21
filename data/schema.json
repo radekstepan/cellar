@@ -1,0 +1,42 @@
+{
+    "projectName": "Outreach Pipeline",
+    "version": "1.0.4",
+    "columns": [
+        {
+            "key": "id",
+            "label": "ID",
+            "type": "id",
+            "width": "80px"
+        },
+        {
+            "key": "target",
+            "label": "Target",
+            "type": "text",
+            "width": "180px"
+        },
+        {
+            "key": "status",
+            "label": "Stage",
+            "type": "select",
+            "options": [
+                "Triage",
+                "Researching",
+                "Drafting",
+                "Ready"
+            ],
+            "width": "140px"
+        },
+        {
+            "key": "research_data",
+            "label": "Agent Research",
+            "type": "longtext",
+            "width": "260px"
+        },
+        {
+            "key": "draft_email",
+            "label": "Draft",
+            "type": "longtext",
+            "width": "260px"
+        }
+    ]
+}

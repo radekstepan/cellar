@@ -1,22 +1,25 @@
 import { Search, Radio, Plus } from 'lucide-react';
 import { Record } from '../../types';
-import { INITIAL_SCHEMA } from '../../data/mockData';
 import { CellRenderer } from '../ui/CellRenderer';
 
 export function RecordsView({
+    schema,
     records,
     searchQuery,
     onSearchChange,
     selectedRecordId,
     onSelectRecord,
     liveCount,
+    onUpdateRecord,
 }: {
+    schema: any;
     records: Record[];
     searchQuery: string;
     onSearchChange: (q: string) => void;
     selectedRecordId: string | null;
     onSelectRecord: (id: string | null) => void;
     liveCount: number;
+    onUpdateRecord: (id: string, field: string, value: string) => void;
 }) {
     return (
         <>
@@ -56,7 +59,7 @@ export function RecordsView({
                     <thead className="sticky top-0 z-20">
                         <tr className="bg-surface-alt/80 backdrop-blur-sm">
                             <th className="w-10 px-3 py-2.5 border-b border-border-subtle" />
-                            {INITIAL_SCHEMA.columns.map((col) => (
+                            {schema.columns.map((col: any) => (
                                 <th
                                     key={col.key}
                                     style={{ width: col.width }}
@@ -90,13 +93,20 @@ export function RecordsView({
                                         )}
                                     </div>
                                 </td>
-                                {INITIAL_SCHEMA.columns.map((col) => (
+                                {schema.columns.map((col: any) => (
                                     <td
                                         key={col.key}
                                         className={`px-4 py-3.5 border-b border-border-subtle text-[12px] transition-colors ${record.isLive ? 'text-ink font-medium' : 'text-ink-secondary'
                                             }`}
                                     >
-                                        <CellRenderer type={col.type} value={record[col.key]} isLive={record.isLive} />
+                                        <CellRenderer
+                                            type={col.type}
+                                            value={record[col.key]}
+                                            isLive={record.isLive}
+                                            recordId={record.id}
+                                            fieldKey={col.key}
+                                            onUpdate={onUpdateRecord}
+                                        />
                                     </td>
                                 ))}
                             </tr>

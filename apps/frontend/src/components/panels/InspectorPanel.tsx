@@ -1,8 +1,36 @@
+import { useState, useEffect } from 'react';
 import { Eye, X, FileText, Zap, CheckCircle2 } from 'lucide-react';
 import { Record } from '../../types';
 import { FieldGroup } from '../ui/FieldGroup';
 
-export function InspectorPanel({ record, onClose }: { record: Record; onClose: () => void }) {
+export function InspectorPanel({
+    record,
+    onClose,
+    onUpdateRecord
+}: {
+    record: Record;
+    onClose: () => void;
+    onUpdateRecord: (id: string, field: string, value: string) => void;
+}) {
+    const [target, setTarget] = useState(record.target || '');
+    const [draftEmail, setDraftEmail] = useState(record.draft_email || '');
+
+    useEffect(() => {
+        setTarget(record.target || '');
+        setDraftEmail(record.draft_email || '');
+    }, [record]);
+
+    const handleTargetBlur = () => {
+        if (target !== record.target) {
+            onUpdateRecord(record.id, 'target', target);
+        }
+    };
+
+    const handleDraftBlur = () => {
+        if (draftEmail !== record.draft_email) {
+            onUpdateRecord(record.id, 'draft_email', draftEmail);
+        }
+    };
     return (
         <aside className="w-80 bg-surface border-l border-border-subtle flex flex-col animate-slide-in-right">
             {/* Header */}
@@ -27,7 +55,10 @@ export function InspectorPanel({ record, onClose }: { record: Record; onClose: (
                 <FieldGroup label="Target" icon={FileText}>
                     <input
                         className="w-full px-3 py-2 bg-surface-alt border border-border-subtle rounded-lg text-[12px] font-medium text-ink placeholder:text-ink-tertiary focus:border-accent/30 focus:ring-1 focus:ring-accent/10 outline-none transition-all"
-                        defaultValue={record.target}
+                        value={target}
+                        onChange={(e) => setTarget(e.target.value)}
+                        onBlur={handleTargetBlur}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleTargetBlur(); }}
                     />
                 </FieldGroup>
 
@@ -35,8 +66,9 @@ export function InspectorPanel({ record, onClose }: { record: Record; onClose: (
                 <FieldGroup label="Draft Payload">
                     <textarea
                         className="w-full h-28 px-3 py-2.5 bg-surface-alt border border-border-subtle rounded-lg text-[12px] text-ink-secondary leading-relaxed resize-none focus:border-accent/30 focus:ring-1 focus:ring-accent/10 outline-none transition-all"
-                        value={record.draft_email}
-                        readOnly
+                        value={draftEmail}
+                        onChange={(e) => setDraftEmail(e.target.value)}
+                        onBlur={handleDraftBlur}
                     />
                 </FieldGroup>
 
