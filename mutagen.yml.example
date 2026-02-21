@@ -1,0 +1,28 @@
+sync:
+  defaults:
+    ignore:
+      vcs: true
+      paths:
+        - "node_modules"
+        - ".git"
+        - ".idea"
+        - ".vscode"
+        - ".DS_Store"
+        - "npm-debug.log"
+        - "yarn-error.log"
+        - ".npm"
+        - "dist"
+        - "build"
+        - "out"
+        - "coverage"
+        - "*.log"
+        - "*.lock"
+        - "*.swp"
+        - "*.swo"
+    permissions:
+      defaultFileMode: 0644
+      defaultDirectoryMode: 0755
+  lumina-core:
+    alpha: "."
+    beta: "user@host:~/.openclaw/workspace/lumina-core"
+    mode: "two-way-resolved"
