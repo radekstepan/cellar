@@ -6,7 +6,7 @@ import { WebSocketServer } from 'ws';
 import chokidar from 'chokidar';
 import { fileURLToPath } from 'url';
 import lockfile from 'proper-lockfile';
-
+import { db } from './lib/db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -77,15 +77,8 @@ app.put('/api/schema/rules', async (req, res) => {
 // Get all records (with optional query filtering)
 app.get('/api/records', async (req, res) => {
     try {
-        const files = await fs.readdir(RECORDS_DIR);
-        const jsonFiles = files.filter(f => f.endsWith('.json'));
-
-        let records = await Promise.all(
-            jsonFiles.map(async (file) => {
-                const content = await fs.readFile(path.join(RECORDS_DIR, file), 'utf-8');
-                return JSON.parse(content);
-            })
-        );
+        await db.read();
+        let records = db.data.records;
 
         // Apply query filters if any exist
         if (req.query && Object.keys(req.query).length > 0) {
@@ -98,6 +91,7 @@ app.get('/api/records', async (req, res) => {
 
         res.json(records);
     } catch (err) {
+        console.error('Failed to read records:', err);
         res.status(500).json({ error: 'Failed to read records' });
     }
 });
@@ -105,21 +99,13 @@ app.get('/api/records', async (req, res) => {
 // Create a new record
 app.post('/api/records', async (req, res) => {
     try {
+        await db.read();
         const data = req.body;
         if (!data.id) {
             data.id = `L-${Date.now().toString().slice(-4)}`; // Simple ID gen
         }
-        const filePath = path.join(RECORDS_DIR, `${data.id}.json`);
-
-        try { await fs.access(filePath); } catch { await fs.writeFile(filePath, '{}', { flag: 'wx' }).catch(() => { }); }
-        const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
-        try {
-            const tempPath = `${filePath}.${Date.now()}.tmp`;
-            await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
-            await fs.rename(tempPath, filePath);
-        } finally {
-            await release();
-        }
+        db.data.records.push(data);
+        await db.write();
 
         res.json(data);
     } catch (err) {
@@ -131,32 +117,18 @@ app.post('/api/records', async (req, res) => {
 // Update an existing record
 app.put('/api/records/:id', async (req, res) => {
     try {
+        await db.read();
         const { id } = req.params;
         const updates = req.body;
-        const filePath = path.join(RECORDS_DIR, `${id}.json`);
 
-        try { await fs.access(filePath); } catch { await fs.writeFile(filePath, '{}', { flag: 'wx' }).catch(() => { }); }
-        const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
-
-        let updatedRecord;
-        try {
-            let record = {};
-            try {
-                const content = await fs.readFile(filePath, 'utf-8');
-                if (content.trim()) record = JSON.parse(content);
-            } catch (e) {
-                // If file doesn't exist or is empty, we'll just create it with the updates
-            }
-
-            updatedRecord = { ...record, ...updates };
-            const tempPath = `${filePath}.${Date.now()}.tmp`;
-            await fs.writeFile(tempPath, JSON.stringify(updatedRecord, null, 2), 'utf-8');
-            await fs.rename(tempPath, filePath);
-        } finally {
-            await release();
+        const index = db.data.records.findIndex(r => r.id === id);
+        if (index !== -1) {
+            db.data.records[index] = { ...db.data.records[index], ...updates };
+            await db.write();
+            res.json(db.data.records[index]);
+        } else {
+            res.status(404).json({ error: 'Not found' });
         }
-
-        res.json(updatedRecord);
     } catch (err) {
         console.error('Failed to update record:', err);
         res.status(500).json({ error: 'Failed to update record' });

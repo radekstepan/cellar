@@ -2,13 +2,11 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import lockfile from 'proper-lockfile';
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-const RECORDS_DIR = path.join(DATA_DIR, 'records');
+import { db } from './lib/db.js';
 
 async function main() {
     const [, , command, ...args] = process.argv;
@@ -32,16 +30,9 @@ async function main() {
                     console.error("Usage: node cli.js query <key> <value>");
                     process.exit(1);
                 }
-                const files = await fs.readdir(RECORDS_DIR);
-                const jsonFiles = files.filter(f => f.endsWith('.json'));
-                const records = [];
-                for (const file of jsonFiles) {
-                    const content = await fs.readFile(path.join(RECORDS_DIR, file), 'utf-8');
-                    const record = JSON.parse(content);
-                    if (String(record[key]) === String(value)) {
-                        records.push(record);
-                    }
-                }
+
+                await db.read();
+                const records = db.data.records.filter(record => String(record[key]) === String(value));
                 console.log(JSON.stringify(records, null, 2));
                 break;
             }
@@ -53,25 +44,19 @@ async function main() {
                     process.exit(1);
                 }
                 const updates = JSON.parse(fieldsRaw);
-                const filePath = path.join(RECORDS_DIR, `${id}.json`);
 
-                try { await fs.access(filePath); } catch {
+                await db.read();
+                const index = db.data.records.findIndex(r => r.id === id);
+                if (index === -1) {
                     console.error("Record not found:", id);
                     process.exit(1);
                 }
-                const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
-                try {
-                    const content = await fs.readFile(filePath, 'utf-8');
-                    const record = JSON.parse(content);
-                    const updatedRecord = { ...record, ...updates, last_modified: new Date().toISOString() };
 
-                    const tempPath = `${filePath}.${Date.now()}.tmp`;
-                    await fs.writeFile(tempPath, JSON.stringify(updatedRecord, null, 2), 'utf-8');
-                    await fs.rename(tempPath, filePath);
-                    console.log(JSON.stringify(updatedRecord, null, 2));
-                } finally {
-                    await release();
-                }
+                const updatedRecord = { ...db.data.records[index], ...updates, last_modified: new Date().toISOString() };
+                db.data.records[index] = updatedRecord;
+                await db.write();
+
+                console.log(JSON.stringify(updatedRecord, null, 2));
                 break;
             }
             case 'create': {
@@ -84,18 +69,13 @@ async function main() {
                 if (!data.id) {
                     data.id = `L-${Date.now().toString().slice(-4)}`;
                 }
-                const filePath = path.join(RECORDS_DIR, `${data.id}.json`);
-                try { await fs.access(filePath); } catch { await fs.writeFile(filePath, '{}', { flag: 'wx' }).catch(() => { }); }
-                const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
-                try {
-                    const newRecord = { ...data, last_modified: new Date().toISOString() };
-                    const tempPath = `${filePath}.${Date.now()}.tmp`;
-                    await fs.writeFile(tempPath, JSON.stringify(newRecord, null, 2), 'utf-8');
-                    await fs.rename(tempPath, filePath);
-                    console.log(JSON.stringify(newRecord, null, 2));
-                } finally {
-                    await release();
-                }
+
+                await db.read();
+                const newRecord = { ...data, last_modified: new Date().toISOString() };
+                db.data.records.push(newRecord);
+                await db.write();
+
+                console.log(JSON.stringify(newRecord, null, 2));
                 break;
             }
             default:

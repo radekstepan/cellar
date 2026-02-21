@@ -72,9 +72,12 @@ export function App() {
     const filteredRecords = useMemo(
         () =>
             records.filter(
-                (r) =>
-                    r.target.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    r.id.toLowerCase().includes(searchQuery.toLowerCase())
+                (r) => {
+                    const searchLower = searchQuery.toLowerCase();
+                    const targetString = String(r.target || r.title || '').toLowerCase();
+                    const idString = String(r.id || '').toLowerCase();
+                    return targetString.includes(searchLower) || idString.includes(searchLower);
+                }
             ),
         [records, searchQuery]
     );
