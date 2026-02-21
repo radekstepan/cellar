@@ -5,6 +5,7 @@ import path from 'path';
 import { WebSocketServer } from 'ws';
 import chokidar from 'chokidar';
 import { fileURLToPath } from 'url';
+import lockfile from 'proper-lockfile';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,9 +60,20 @@ app.post('/api/records', async (req, res) => {
             data.id = `L-${Date.now().toString().slice(-4)}`; // Simple ID gen
         }
         const filePath = path.join(RECORDS_DIR, `${data.id}.json`);
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+
+        try { await fs.access(filePath); } catch { await fs.writeFile(filePath, '{}', { flag: 'wx' }).catch(() => { }); }
+        const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
+        try {
+            const tempPath = `${filePath}.${Date.now()}.tmp`;
+            await fs.writeFile(tempPath, JSON.stringify(data, null, 2), 'utf-8');
+            await fs.rename(tempPath, filePath);
+        } finally {
+            await release();
+        }
+
         res.json(data);
     } catch (err) {
+        console.error('Failed to create record:', err);
         res.status(500).json({ error: 'Failed to create record' });
     }
 });
@@ -73,18 +85,30 @@ app.put('/api/records/:id', async (req, res) => {
         const updates = req.body;
         const filePath = path.join(RECORDS_DIR, `${id}.json`);
 
-        let record = {};
+        try { await fs.access(filePath); } catch { await fs.writeFile(filePath, '{}', { flag: 'wx' }).catch(() => { }); }
+        const release = await lockfile.lock(filePath, { retries: 5, realpath: false });
+
+        let updatedRecord;
         try {
-            const content = await fs.readFile(filePath, 'utf-8');
-            record = JSON.parse(content);
-        } catch (e) {
-            // If file doesn't exist, we'll just create it with the updates
+            let record = {};
+            try {
+                const content = await fs.readFile(filePath, 'utf-8');
+                if (content.trim()) record = JSON.parse(content);
+            } catch (e) {
+                // If file doesn't exist or is empty, we'll just create it with the updates
+            }
+
+            updatedRecord = { ...record, ...updates };
+            const tempPath = `${filePath}.${Date.now()}.tmp`;
+            await fs.writeFile(tempPath, JSON.stringify(updatedRecord, null, 2), 'utf-8');
+            await fs.rename(tempPath, filePath);
+        } finally {
+            await release();
         }
 
-        const updatedRecord = { ...record, ...updates };
-        await fs.writeFile(filePath, JSON.stringify(updatedRecord, null, 2), 'utf-8');
         res.json(updatedRecord);
     } catch (err) {
+        console.error('Failed to update record:', err);
         res.status(500).json({ error: 'Failed to update record' });
     }
 });
