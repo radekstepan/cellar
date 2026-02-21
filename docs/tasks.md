@@ -14,8 +14,8 @@ The primary piece needed to get OpenClaw running in a controlled containerized e
 
 ### 2. The Agent Interface (CLI vs API)
 The interface through which OpenClaw actually interacts with the "spreadsheet" state. Right now, only basic CRUD via HTTP API is implemented in `apps/server/index.js`, without agent-friendly affordances.
-- [ ] Option A (CLI): Create a `cli.js` script to expose commands directly to the terminal for OpenClaw (e.g., `node cli.js query --status="Needs Research"`).
-- [ ] Option B (API): Extend the current backend API specifically for OpenClaw. Needs:
+- [x] Option A (CLI): Create a `cli.js` script to expose commands directly to the terminal for OpenClaw (e.g., `node cli.js query --status="Needs Research"`).
+- [x] Option B (API): Extend the current backend API specifically for OpenClaw. (Also implemented for flexibility).
   - Add query/filtering endpoints (e.g., `GET /api/records?status=X`).
   - Add specific endpoints to read/update the `schema.json` `ai_pipeline_rules`.
 

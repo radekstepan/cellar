@@ -34,18 +34,68 @@ app.get('/api/schema', async (req, res) => {
     }
 });
 
-// Get all records
+// Get AI pipeline rules from schema
+app.get('/api/schema/rules', async (req, res) => {
+    try {
+        const schemaPath = path.join(DATA_DIR, 'schema.json');
+        const schemaRaw = await fs.readFile(schemaPath, 'utf-8');
+        const schema = JSON.parse(schemaRaw);
+        res.json(schema.ai_pipeline_rules || {});
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to read schema rules' });
+    }
+});
+
+// Update AI pipeline rules in schema
+app.put('/api/schema/rules', async (req, res) => {
+    try {
+        const schemaPath = path.join(DATA_DIR, 'schema.json');
+
+        try { await fs.access(schemaPath); } catch { await fs.writeFile(schemaPath, '{}', { flag: 'wx' }).catch(() => { }); }
+        const release = await lockfile.lock(schemaPath, { retries: 5, realpath: false });
+
+        try {
+            const schemaRaw = await fs.readFile(schemaPath, 'utf-8');
+            const schema = JSON.parse(schemaRaw);
+
+            schema.ai_pipeline_rules = req.body;
+
+            const tempPath = `${schemaPath}.${Date.now()}.tmp`;
+            await fs.writeFile(tempPath, JSON.stringify(schema, null, 2), 'utf-8');
+            await fs.rename(tempPath, schemaPath);
+
+            res.json(schema.ai_pipeline_rules);
+        } finally {
+            await release();
+        }
+    } catch (err) {
+        console.error('Failed to update schema rules:', err);
+        res.status(500).json({ error: 'Failed to update schema rules' });
+    }
+});
+
+// Get all records (with optional query filtering)
 app.get('/api/records', async (req, res) => {
     try {
         const files = await fs.readdir(RECORDS_DIR);
         const jsonFiles = files.filter(f => f.endsWith('.json'));
 
-        const records = await Promise.all(
+        let records = await Promise.all(
             jsonFiles.map(async (file) => {
                 const content = await fs.readFile(path.join(RECORDS_DIR, file), 'utf-8');
                 return JSON.parse(content);
             })
         );
+
+        // Apply query filters if any exist
+        if (req.query && Object.keys(req.query).length > 0) {
+            records = records.filter(record => {
+                return Object.entries(req.query).every(([key, value]) => {
+                    return String(record[key]) === String(value);
+                });
+            });
+        }
+
         res.json(records);
     } catch (err) {
         res.status(500).json({ error: 'Failed to read records' });
