@@ -1,7 +1,7 @@
 {
-  "name": "lumina-core",
+  "name": "cellar",
   "version": "0.1.0",
-  "description": "Baseline frontend component library",
+  "description": "Headless CMS for AI agents",
   "private": true,
   "workspaces": [
     "apps/*"

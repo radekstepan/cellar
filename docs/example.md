@@ -1,4 +1,4 @@
-# 🤖 Agent Orchestration: Outreach Pipeline
+# 🤖 Agent Orchestration: Outreach
 
 This document outlines the autonomous agent workflow for discovering new leads and drafting personalized outreach emails for RedactSolo. The process is divided into two distinct tasks that coordinate via a central todo list.
 
@@ -8,7 +8,7 @@ This document outlines the autonomous agent workflow for discovering new leads a
 
 **File:** [`docs/outreach-todo.md`](docs/outreach-todo.md)
 
-This file acts as the **state of truth** and the queue for the entire pipeline.
+This file acts as the **state of truth** and the queue for the entire cellar.
 - **Input:** New leads are appended here by the Discovery agent.
 - **Queue:** Unchecked items (`- [ ]`) represent pending work.
 - **Output:** Checked items (`- [x]`) represent completed research with links to generated email drafts.

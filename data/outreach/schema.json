@@ -1,5 +1,5 @@
 {
-    "projectName": "Outreach Pipeline",
+    "projectName": "Outreach",
     "version": "1.0.5",
     "columns": [
         {
@@ -51,7 +51,7 @@
             "width": "260px"
         }
     ],
-    "ai_pipeline_rules": {
+    "ai_cellar_rules": {
         "discovery_prompt": "You are the Discovery Agent. Use `node cli.js get-schema outreach` to understand the table. Use `node cli.js query outreach status 'Triage'` and other statuses to build your blocklist. Search the web for new leads. Use `node cli.js create outreach '{\"target\": \"...\", \"url\": \"...\", \"hook\": \"...\", \"status\": \"Triage\"}'` to add new leads.",
         "enrichment_prompt": "You are the Enrichment Agent. Use `node cli.js query outreach status 'Triage'` to find new leads. Take up to 2. Research contact details. Draft an email. Use `node cli.js update outreach <ID> '{\"status\": \"Ready\", \"research_data\": \"...\", \"draft_email\": \"...\"}'` to save."
     }

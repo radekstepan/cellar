@@ -7,8 +7,8 @@ type HeaderProps = {
     handleSync: () => void;
     isSyncing: boolean;
     tables: string[];
-    activeToken: string;
-    onSelectionChange: (token: string) => void;
+    activeTable: string;
+    onSelectionChange: (table: string) => void;
 };
 
 export function Header({
@@ -17,7 +17,7 @@ export function Header({
     handleSync,
     isSyncing,
     tables,
-    activeToken,
+    activeTable,
     onSelectionChange
 }: HeaderProps) {
     return (
@@ -32,7 +32,7 @@ export function Header({
                 <div className="flex items-center gap-2">
                     <Database className="w-3.5 h-3.5 text-ink-tertiary" />
                     <select
-                        value={activeToken}
+                        value={activeTable}
                         onChange={(e) => onSelectionChange(e.target.value)}
                         className="text-[13px] font-medium bg-transparent border-none text-ink focus:ring-0 cursor-pointer hover:text-accent transition-colors"
                     >
@@ -40,12 +40,6 @@ export function Header({
                             <option key={table} value={table}>{table}</option>
                         ))}
                     </select>
-                </div>
-
-                <div className="w-px h-4 bg-border" />
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-surface-alt border border-border-subtle cursor-pointer" title="Copy Agent Token">
-                    <span className="text-[11px] font-medium text-ink-tertiary">Token:</span>
-                    <span className="text-[11px] font-mono text-ink-secondary tracking-tight select-all">{activeToken}</span>
                 </div>
 
                 <div className="w-px h-4 bg-border" />

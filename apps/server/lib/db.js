@@ -11,12 +11,12 @@ const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data');
 
 const dbCache = new Map();
 
-export async function getDb(token = 'default') {
-    if (dbCache.has(token)) {
-        return dbCache.get(token);
+export async function getDb(table = 'default') {
+    if (dbCache.has(table)) {
+        return dbCache.get(table);
     }
 
-    const recordsDir = path.join(DATA_DIR, token, 'records');
+    const recordsDir = path.join(DATA_DIR, table, 'records');
 
     // ensure directories exist
     await fs.mkdir(recordsDir, { recursive: true });
@@ -25,6 +25,6 @@ export async function getDb(token = 'default') {
     const db = new Low(adapter, { records: [] });
     await db.read();
 
-    dbCache.set(token, db);
+    dbCache.set(table, db);
     return db;
 }

@@ -19,9 +19,9 @@ async function main() {
     try {
         switch (command) {
             case 'get-schema': {
-                const token = args[0] || 'default';
+                const table = args[0] || 'default';
                 try {
-                    const schemaRaw = await fs.readFile(path.join(DATA_DIR, token, 'schema.json'), 'utf-8');
+                    const schemaRaw = await fs.readFile(path.join(DATA_DIR, table, 'schema.json'), 'utf-8');
                     console.log(schemaRaw);
                 } catch (err) {
                     // fallback to default
@@ -31,21 +31,21 @@ async function main() {
                 break;
             }
             case 'get-all': {
-                const token = args[0];
-                if (!token) {
-                    console.error("Usage: node cli.js get-all <token>");
+                const table = args[0];
+                if (!table) {
+                    console.error("Usage: node cli.js get-all <table>");
                     process.exit(1);
                 }
-                const dbInstance = await getDb(token);
+                const dbInstance = await getDb(table);
                 console.log(JSON.stringify(dbInstance.data.records, null, 2));
                 break;
             }
             case 'query': {
-                const token = args[0];
+                const table = args[0];
                 const key = args[1];
                 const value = args[2];
-                if (!token || !key || !value) {
-                    console.error("Usage: node cli.js query <token> <key> <value> [--limit <number>]");
+                if (!table || !key || !value) {
+                    console.error("Usage: node cli.js query <table> <key> <value> [--limit <number>]");
                     process.exit(1);
                 }
 
@@ -55,7 +55,7 @@ async function main() {
                     limit = parseInt(args[limitIndex + 1], 10);
                 }
 
-                const dbInstance = await getDb(token);
+                const dbInstance = await getDb(table);
                 let records = dbInstance.data.records.filter(record => String(record[key]) === String(value));
 
                 if (limit !== null && !isNaN(limit)) {
@@ -66,16 +66,16 @@ async function main() {
                 break;
             }
             case 'update': {
-                const token = args[0];
+                const table = args[0];
                 const id = args[1];
                 const fieldsRaw = args[2];
-                if (!token || !id || !fieldsRaw) {
-                    console.error("Usage: node cli.js update <token> <id> '<json_fields>'");
+                if (!table || !id || !fieldsRaw) {
+                    console.error("Usage: node cli.js update <table> <id> '<json_fields>'");
                     process.exit(1);
                 }
                 const updates = JSON.parse(fieldsRaw);
 
-                const dbInstance = await getDb(token);
+                const dbInstance = await getDb(table);
                 const index = dbInstance.data.records.findIndex(r => r.id === id);
                 if (index === -1) {
                     console.error("Record not found:", id);
@@ -90,10 +90,10 @@ async function main() {
                 break;
             }
             case 'create': {
-                const token = args[0];
+                const table = args[0];
                 const fieldsRaw = args[1];
-                if (!token || !fieldsRaw) {
-                    console.error("Usage: node cli.js create <token> '<json_fields>'");
+                if (!table || !fieldsRaw) {
+                    console.error("Usage: node cli.js create <table> '<json_fields>'");
                     process.exit(1);
                 }
                 const data = JSON.parse(fieldsRaw);
@@ -101,7 +101,7 @@ async function main() {
                     data.id = `L-${Date.now().toString().slice(-4)}`;
                 }
 
-                const dbInstance = await getDb(token);
+                const dbInstance = await getDb(table);
                 const newRecord = { ...data, last_modified: new Date().toISOString() };
                 dbInstance.data.records.push(newRecord);
                 await dbInstance.write();

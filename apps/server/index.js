@@ -34,10 +34,10 @@ app.get('/api/tables', async (req, res) => {
 });
 
 // Get schema
-app.get('/api/:token/schema', async (req, res) => {
-    const { token } = req.params;
+app.get('/api/:table/schema', async (req, res) => {
+    const { table } = req.params;
     try {
-        const schemaRaw = await fs.readFile(path.join(DATA_DIR, token, 'schema.json'), 'utf-8');
+        const schemaRaw = await fs.readFile(path.join(DATA_DIR, table, 'schema.json'), 'utf-8');
         res.json(JSON.parse(schemaRaw));
     } catch (err) {
         // Fallback to default schema if not found in table dir
@@ -51,24 +51,24 @@ app.get('/api/:token/schema', async (req, res) => {
     }
 });
 
-// Get AI pipeline rules from schema
-app.get('/api/:token/schema/rules', async (req, res) => {
-    const { token } = req.params;
+// Get AI cellar rules from schema
+app.get('/api/:table/schema/rules', async (req, res) => {
+    const { table } = req.params;
     try {
-        const schemaPath = path.join(DATA_DIR, token, 'schema.json');
+        const schemaPath = path.join(DATA_DIR, table, 'schema.json');
         const schemaRaw = await fs.readFile(schemaPath, 'utf-8');
         const schema = JSON.parse(schemaRaw);
-        res.json(schema.ai_pipeline_rules || {});
+        res.json(schema.ai_cellar_rules || {});
     } catch (err) {
         res.status(500).json({ error: 'Failed to read schema rules' });
     }
 });
 
-// Update AI pipeline rules in schema
-app.put('/api/:token/schema/rules', async (req, res) => {
-    const { token } = req.params;
+// Update AI cellar rules in schema
+app.put('/api/:table/schema/rules', async (req, res) => {
+    const { table } = req.params;
     try {
-        const schemaPath = path.join(DATA_DIR, token, 'schema.json');
+        const schemaPath = path.join(DATA_DIR, table, 'schema.json');
 
         try { await fs.access(schemaPath); } catch { await fs.writeFile(schemaPath, '{}', { flag: 'wx' }).catch(() => { }); }
         const release = await lockfile.lock(schemaPath, { retries: 5, realpath: false });
@@ -77,13 +77,13 @@ app.put('/api/:token/schema/rules', async (req, res) => {
             const schemaRaw = await fs.readFile(schemaPath, 'utf-8');
             const schema = JSON.parse(schemaRaw);
 
-            schema.ai_pipeline_rules = req.body;
+            schema.ai_cellar_rules = req.body;
 
             const tempPath = `${schemaPath}.${Date.now()}.tmp`;
             await fs.writeFile(tempPath, JSON.stringify(schema, null, 2), 'utf-8');
             await fs.rename(tempPath, schemaPath);
 
-            res.json(schema.ai_pipeline_rules);
+            res.json(schema.ai_cellar_rules);
         } finally {
             await release();
         }
@@ -94,10 +94,10 @@ app.put('/api/:token/schema/rules', async (req, res) => {
 });
 
 // Get all records (with optional query filtering)
-app.get('/api/:token/records', async (req, res) => {
-    const { token } = req.params;
+app.get('/api/:table/records', async (req, res) => {
+    const { table } = req.params;
     try {
-        const dbInstance = await getDb(token);
+        const dbInstance = await getDb(table);
         let records = dbInstance.data.records;
 
         // Apply query filters if any exist
@@ -117,10 +117,10 @@ app.get('/api/:token/records', async (req, res) => {
 });
 
 // Create a new record
-app.post('/api/:token/records', async (req, res) => {
-    const { token } = req.params;
+app.post('/api/:table/records', async (req, res) => {
+    const { table } = req.params;
     try {
-        const dbInstance = await getDb(token);
+        const dbInstance = await getDb(table);
         const data = req.body;
         if (!data.id) {
             data.id = `L-${Date.now().toString().slice(-4)}`; // Simple ID gen
@@ -136,10 +136,10 @@ app.post('/api/:token/records', async (req, res) => {
 });
 
 // Update an existing record
-app.put('/api/:token/records/:id', async (req, res) => {
-    const { token, id } = req.params;
+app.put('/api/:table/records/:id', async (req, res) => {
+    const { table, id } = req.params;
     try {
-        const dbInstance = await getDb(token);
+        const dbInstance = await getDb(table);
         const updates = req.body;
 
         const index = dbInstance.data.records.findIndex(r => r.id === id);
@@ -189,12 +189,12 @@ watcher.on('all', async (event, filePath) => {
             setTimeout(async () => {
                 const content = await fs.readFile(filePath, 'utf-8');
                 const record = JSON.parse(content);
-                // Extract the token from the path `.../data/<token>/records/<id>.json`
+                // Extract the table from the path `.../data/<table>/records/<id>.json`
                 const parts = filePath.split(path.sep);
                 const recordsIndex = parts.lastIndexOf('records');
-                const token = parts[recordsIndex - 1];
+                const table = parts[recordsIndex - 1];
 
-                broadcast({ type: 'RECORD_UPDATED', token, record });
+                broadcast({ type: 'RECORD_UPDATED', table, record });
             }, 50);
         } catch (err) {
             console.error('Error reading changed record:', err);

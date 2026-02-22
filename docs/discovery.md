@@ -5,7 +5,7 @@
 ## Workflow
 
 ### 1. Read & Build Blocklist
-Before searching for new leads, you must understand what is already in the pipeline.
+Before searching for new leads, you must understand what is already in the cellar.
 Use the generic CLI to query existing targets and avoid adding duplicates. (Hint: check multiple statuses)
 
 ```bash

@@ -19,7 +19,7 @@ export function App() {
     const [isLogVisible, setIsLogVisible] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
     const [tables, setTables] = useState<string[]>([]);
-    const [activeToken, setActiveToken] = useState<string>('default');
+    const [activeTable, setActiveTable] = useState<string>('default');
 
     // Fetch available tables on mount
     useEffect(() => {
@@ -29,29 +29,29 @@ export function App() {
                 setTables(fetchedTables);
                 // Simple state init: check URL params, else check localStorage, else take first table
                 const params = new URLSearchParams(window.location.search);
-                const urlToken = params.get('token');
-                if (urlToken && fetchedTables.includes(urlToken)) {
-                    setActiveToken(urlToken);
+                const urlTable = params.get('table');
+                if (urlTable && fetchedTables.includes(urlTable)) {
+                    setActiveTable(urlTable);
                 } else {
-                    const savedToken = localStorage.getItem('activeToken');
-                    if (savedToken && fetchedTables.includes(savedToken)) {
-                        setActiveToken(savedToken);
+                    const savedTable = localStorage.getItem('activeTable');
+                    if (savedTable && fetchedTables.includes(savedTable)) {
+                        setActiveTable(savedTable);
                     } else if (fetchedTables.length > 0) {
-                        setActiveToken(fetchedTables[0]);
+                        setActiveTable(fetchedTables[0]);
                     }
                 }
             })
             .catch(err => console.error('Failed to load tables:', err));
     }, []);
 
-    // Load schema and records when activeToken changes
+    // Load schema and records when activeTable changes
     useEffect(() => {
-        if (!activeToken) return;
+        if (!activeTable) return;
 
-        // Use the activeToken when querying endpoints
+        // Use the activeTable when querying endpoints
         Promise.all([
-            fetch(`/api/${activeToken}/schema`).then(r => r.json()),
-            fetch(`/api/${activeToken}/records`).then(r => r.json())
+            fetch(`/api/${activeTable}/schema`).then(r => r.json()),
+            fetch(`/api/${activeTable}/records`).then(r => r.json())
         ]).then(([fetchedSchema, fetchedRecords]) => {
             setSchema(fetchedSchema);
             setRecords(fetchedRecords);
@@ -66,7 +66,7 @@ export function App() {
                 const data = JSON.parse(event.data);
                 if (data.type === 'RECORD_UPDATED') {
                     // Only process updates for the currently active table
-                    if (data.token !== activeToken) return;
+                    if (data.table !== activeTable) return;
 
                     setRecords(prev => {
                         const updated = [...prev];
@@ -87,11 +87,11 @@ export function App() {
         return () => {
             ws.close();
         };
-    }, [activeToken]);
+    }, [activeTable]);
 
     const handleUpdateRecord = useCallback(async (id: string, field: string, value: string) => {
         try {
-            await fetch(`/api/${activeToken}/records/${id}`, {
+            await fetch(`/api/${activeTable}/records/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ [field]: value })
@@ -99,7 +99,7 @@ export function App() {
         } catch (e) {
             console.error('Failed to update record:', e);
         }
-    }, [activeToken]);
+    }, [activeTable]);
 
     const filteredRecords = useMemo(
         () =>
@@ -140,11 +140,11 @@ export function App() {
 
     const liveCount = records.filter((r) => r.isLive).length;
 
-    const handleSelectionChange = (token: string) => {
-        setActiveToken(token);
-        localStorage.setItem('activeToken', token);
+    const handleSelectionChange = (table: string) => {
+        setActiveTable(table);
+        localStorage.setItem('activeTable', table);
         const url = new URL(window.location.href);
-        url.searchParams.set('token', token);
+        url.searchParams.set('table', table);
         window.history.pushState({}, '', url);
     };
 
@@ -181,7 +181,7 @@ export function App() {
                     handleSync={handleSync}
                     isSyncing={isSyncing}
                     tables={tables}
-                    activeToken={activeToken}
+                    activeTable={activeTable}
                     onSelectionChange={handleSelectionChange}
                 />
 

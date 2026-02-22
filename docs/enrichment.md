@@ -19,7 +19,7 @@ node apps/server/cli.js query outreach status Triage
 - Use a playful "Tired Developer" persona (direct, helpful, no marketing fluff).
 - **Constraint:** Under 120 words, lowercase subject, specific hook.
 
-### 4. Advance Pipeline State
+### 4. Advance Cellar State
 Once you have the research and the draft, update the database record via the CLI to move the item to the `Ready` status and attach your findings.
 
 ```bash

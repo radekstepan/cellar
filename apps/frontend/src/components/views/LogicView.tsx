@@ -11,7 +11,7 @@ export function LogicView() {
                         <h2 className="text-lg font-semibold tracking-tight text-ink">Agent Logic & Schema</h2>
                     </div>
                     <p className="text-[13px] text-ink-secondary leading-relaxed">
-                        Pipeline definitions for your local-first data. These rules control how the agent processes records.
+                        Cellar definitions for your local-first data. These rules control how the agent processes records.
                     </p>
                 </div>
 

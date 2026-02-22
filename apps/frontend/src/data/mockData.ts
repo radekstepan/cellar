@@ -1,7 +1,7 @@
 import { Record, Log } from '../types';
 
 export const INITIAL_SCHEMA = {
-    projectName: 'Outreach Pipeline',
+    projectName: 'Outreach',
     version: '1.0.4',
     columns: [
         { key: 'id', label: 'ID', type: 'id', width: '80px' },

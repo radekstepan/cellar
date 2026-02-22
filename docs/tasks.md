@@ -7,7 +7,7 @@ Support an architecture where an AI agent operates within a Docker container to 
 
 - [x] be able to run outside of docker for local development. So do not mention in SKILLS document, but does in README.
 - [x] look if there is a nodejs library we could use for maintaining the local json database instead of hardcoding the logic
-- [x] need to support mutliple tables and each one has a unique "token"
+- [x] need to support mutliple tables and each one has a unique identifier
 - [x] add unit and integration tests for the whole app
 - [ ] use a better nodejs server with strict typing (joi?)
 - [ ] how do you add how the workflow is defined? A task is at which stage?

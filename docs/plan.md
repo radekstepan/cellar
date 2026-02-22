@@ -1,7 +1,7 @@
 
 
 
-Shifting to a **Local-First, JSON-backed, Git-synced** architecture is a fantastic approach. It gives you complete data ownership, version control (audit history via Git commits), and the flexibility to change your pipeline without dealing with database migrations.
+Shifting to a **Local-First, JSON-backed, Git-synced** architecture is a fantastic approach. It gives you complete data ownership, version control (audit history via Git commits), and the flexibility to change your cellar without dealing with database migrations.
 
 By making it generic, you are essentially building a **Local-First Headless CMS for AI Agents**, presented as a spreadsheet.
 
@@ -18,7 +18,7 @@ Instead of one giant `data.json` array, use a **Folder-as-a-Table** approach.
 ```text
 my-outreach-project/
 ├── .git/
-├── schema.json          <-- Defines your pipeline and columns
+├── schema.json          <-- Defines your cellar and columns
 └── records/             <-- The "Table"
     ├── lead_01H8X.json  <-- A single row
     ├── lead_01H8Y.json
@@ -26,12 +26,12 @@ my-outreach-project/
 ```
 
 #### `schema.json` (The Configuration)
-This file tells the UI how to render the spreadsheet and tells Openclaw what the pipeline looks like.
+This file tells the UI how to render the spreadsheet and tells Openclaw what the cellar looks like.
 ```json
 {
   "project_name": "Outreach Campaign",
   "primary_key": "id",
-  "pipeline_column": "status",
+  "cellar_column": "status",
   "columns": 
     },
     { "key": "research_data", "label": "Agent Research", "type": "longtext" },
@@ -73,16 +73,16 @@ The Openclaw Skill wrapper will expose these generic functions:
 *   **`create_record(fields)`**
     *   *What it does:* Generates a new unique ID, creates a new `.json` file in the folder, and saves the data.
 
-### 3. Guiding the Agent's "Pipeline" Behavior
+### 3. Guiding the Agent's "Cellar" Behavior
 
-If the system is generic, how does Openclaw know *what* to do at each step of the pipeline? 
+If the system is generic, how does Openclaw know *what* to do at each step of the cellar? 
 
 You handle this via **Agent Instructions (System Prompts) attached to the Schema**. You can expand your `schema.json` to include instructions for the AI:
 
 ```json
-  "ai_pipeline_rules":
+  "ai_cellar_rules":
 ```
-When Openclaw wakes up every 10 minutes, it fetches the schema, reads these `ai_pipeline_rules`, queries for records matching the triggers, and executes the required actions. **If you want to change your workflow, you just edit the JSON configuration.**
+When Openclaw wakes up every 10 minutes, it fetches the schema, reads these `ai_cellar_rules`, queries for records matching the triggers, and executes the required actions. **If you want to change your workflow, you just edit the JSON configuration.**
 
 ---
 

@@ -36,7 +36,7 @@ export function GitView() {
                         <span className="text-[12px] font-medium text-ink-secondary">Recent Commits</span>
                     </div>
                     <div className="space-y-2">
-                        {['Update L-002 research data', 'Initial pipeline setup', 'Add schema v1.0.4'].map((msg, i) => (
+                        {['Update L-002 research data', 'Initial cellar setup', 'Add schema v1.0.4'].map((msg, i) => (
                             <div key={i} className="flex items-center gap-3 py-2 animate-slide-in-up" style={{ animationDelay: `${i * 60}ms` }}>
                                 <span className="w-1.5 h-1.5 rounded-full bg-ink-tertiary shrink-0" />
                                 <span className="text-[12px] text-ink-secondary">{msg}</span>
