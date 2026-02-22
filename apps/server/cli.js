@@ -30,17 +30,38 @@ async function main() {
                 }
                 break;
             }
+            case 'get-all': {
+                const token = args[0];
+                if (!token) {
+                    console.error("Usage: node cli.js get-all <token>");
+                    process.exit(1);
+                }
+                const dbInstance = await getDb(token);
+                console.log(JSON.stringify(dbInstance.data.records, null, 2));
+                break;
+            }
             case 'query': {
                 const token = args[0];
                 const key = args[1];
                 const value = args[2];
                 if (!token || !key || !value) {
-                    console.error("Usage: node cli.js query <token> <key> <value>");
+                    console.error("Usage: node cli.js query <token> <key> <value> [--limit <number>]");
                     process.exit(1);
                 }
 
+                let limit = null;
+                const limitIndex = args.indexOf('--limit');
+                if (limitIndex !== -1 && args.length > limitIndex + 1) {
+                    limit = parseInt(args[limitIndex + 1], 10);
+                }
+
                 const dbInstance = await getDb(token);
-                const records = dbInstance.data.records.filter(record => String(record[key]) === String(value));
+                let records = dbInstance.data.records.filter(record => String(record[key]) === String(value));
+
+                if (limit !== null && !isNaN(limit)) {
+                    records = records.slice(0, limit);
+                }
+
                 console.log(JSON.stringify(records, null, 2));
                 break;
             }

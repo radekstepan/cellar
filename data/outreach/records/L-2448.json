@@ -1,0 +1,10 @@
+{
+  "target": "Test Agency 1",
+  "url": "https://test1.com",
+  "hook": "manual vetting",
+  "status": "Ready",
+  "id": "L-2448",
+  "last_modified": "2026-02-22T05:50:27.014Z",
+  "research_data": "Found CEO info@test1.com",
+  "draft_email": "Subject: Test\n\nHi CEO, test hook is manual vetting"
+}
