@@ -6,7 +6,7 @@ import { WebSocketServer } from 'ws';
 import chokidar from 'chokidar';
 import { fileURLToPath } from 'url';
 import lockfile from 'proper-lockfile';
-import { db } from './lib/db.js';
+import { getDb } from './lib/db.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -17,27 +17,45 @@ app.use(cors());
 app.use(express.json());
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-const RECORDS_DIR = path.join(DATA_DIR, 'records');
-
-// Ensure directories exist
-await fs.mkdir(RECORDS_DIR, { recursive: true });
 
 // --- API Endpoints ---
 
-// Get schema
-app.get('/api/schema', async (req, res) => {
+// Get all available tables
+app.get('/api/tables', async (req, res) => {
     try {
-        const schemaRaw = await fs.readFile(path.join(DATA_DIR, 'schema.json'), 'utf-8');
+        const entries = await fs.readdir(DATA_DIR, { withFileTypes: true });
+        const tables = entries
+            .filter(dirent => dirent.isDirectory() && dirent.name !== '.DS_Store')
+            .map(dirent => dirent.name);
+        res.json(tables.length > 0 ? tables : ['default']);
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to list tables' });
+    }
+});
+
+// Get schema
+app.get('/api/:token/schema', async (req, res) => {
+    const { token } = req.params;
+    try {
+        const schemaRaw = await fs.readFile(path.join(DATA_DIR, token, 'schema.json'), 'utf-8');
         res.json(JSON.parse(schemaRaw));
     } catch (err) {
+        // Fallback to default schema if not found in table dir
+        try {
+            const defaultSchema = await fs.readFile(path.join(DATA_DIR, 'default', 'schema.json'), 'utf-8');
+            res.json(JSON.parse(defaultSchema));
+        } catch (fallbackErr) {
+            res.status(500).json({ error: 'Failed to read schema' });
+        }
         res.status(500).json({ error: 'Failed to read schema' });
     }
 });
 
 // Get AI pipeline rules from schema
-app.get('/api/schema/rules', async (req, res) => {
+app.get('/api/:token/schema/rules', async (req, res) => {
+    const { token } = req.params;
     try {
-        const schemaPath = path.join(DATA_DIR, 'schema.json');
+        const schemaPath = path.join(DATA_DIR, token, 'schema.json');
         const schemaRaw = await fs.readFile(schemaPath, 'utf-8');
         const schema = JSON.parse(schemaRaw);
         res.json(schema.ai_pipeline_rules || {});
@@ -47,9 +65,10 @@ app.get('/api/schema/rules', async (req, res) => {
 });
 
 // Update AI pipeline rules in schema
-app.put('/api/schema/rules', async (req, res) => {
+app.put('/api/:token/schema/rules', async (req, res) => {
+    const { token } = req.params;
     try {
-        const schemaPath = path.join(DATA_DIR, 'schema.json');
+        const schemaPath = path.join(DATA_DIR, token, 'schema.json');
 
         try { await fs.access(schemaPath); } catch { await fs.writeFile(schemaPath, '{}', { flag: 'wx' }).catch(() => { }); }
         const release = await lockfile.lock(schemaPath, { retries: 5, realpath: false });
@@ -75,10 +94,11 @@ app.put('/api/schema/rules', async (req, res) => {
 });
 
 // Get all records (with optional query filtering)
-app.get('/api/records', async (req, res) => {
+app.get('/api/:token/records', async (req, res) => {
+    const { token } = req.params;
     try {
-        await db.read();
-        let records = db.data.records;
+        const dbInstance = await getDb(token);
+        let records = dbInstance.data.records;
 
         // Apply query filters if any exist
         if (req.query && Object.keys(req.query).length > 0) {
@@ -97,15 +117,16 @@ app.get('/api/records', async (req, res) => {
 });
 
 // Create a new record
-app.post('/api/records', async (req, res) => {
+app.post('/api/:token/records', async (req, res) => {
+    const { token } = req.params;
     try {
-        await db.read();
+        const dbInstance = await getDb(token);
         const data = req.body;
         if (!data.id) {
             data.id = `L-${Date.now().toString().slice(-4)}`; // Simple ID gen
         }
-        db.data.records.push(data);
-        await db.write();
+        dbInstance.data.records.push(data);
+        await dbInstance.write();
 
         res.json(data);
     } catch (err) {
@@ -115,17 +136,17 @@ app.post('/api/records', async (req, res) => {
 });
 
 // Update an existing record
-app.put('/api/records/:id', async (req, res) => {
+app.put('/api/:token/records/:id', async (req, res) => {
+    const { token, id } = req.params;
     try {
-        await db.read();
-        const { id } = req.params;
+        const dbInstance = await getDb(token);
         const updates = req.body;
 
-        const index = db.data.records.findIndex(r => r.id === id);
+        const index = dbInstance.data.records.findIndex(r => r.id === id);
         if (index !== -1) {
-            db.data.records[index] = { ...db.data.records[index], ...updates };
-            await db.write();
-            res.json(db.data.records[index]);
+            dbInstance.data.records[index] = { ...dbInstance.data.records[index], ...updates };
+            await dbInstance.write();
+            res.json(dbInstance.data.records[index]);
         } else {
             res.status(404).json({ error: 'Not found' });
         }
@@ -156,8 +177,8 @@ const broadcast = (message) => {
     }
 };
 
-// Watch records folder for changes
-const watcher = chokidar.watch(RECORDS_DIR + '/*.json', {
+// Watch records folders for changes
+const watcher = chokidar.watch(path.join(DATA_DIR, '*/records/*.json'), {
     ignoreInitial: true,
 });
 
@@ -168,7 +189,12 @@ watcher.on('all', async (event, filePath) => {
             setTimeout(async () => {
                 const content = await fs.readFile(filePath, 'utf-8');
                 const record = JSON.parse(content);
-                broadcast({ type: 'RECORD_UPDATED', record });
+                // Extract the token from the path `.../data/<token>/records/<id>.json`
+                const parts = filePath.split(path.sep);
+                const recordsIndex = parts.lastIndexOf('records');
+                const token = parts[recordsIndex - 1];
+
+                broadcast({ type: 'RECORD_UPDATED', token, record });
             }, 50);
         } catch (err) {
             console.error('Error reading changed record:', err);
@@ -176,7 +202,7 @@ watcher.on('all', async (event, filePath) => {
     }
 });
 
-console.log(`Watching for file changes in ${RECORDS_DIR}`);
+console.log(`Watching for file changes in ${DATA_DIR}/*/records`);
 
 // --- Serve Frontend Statics ---
 const FRONTEND_DIST = path.join(__dirname, '..', 'frontend', 'dist');

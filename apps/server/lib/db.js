@@ -8,12 +8,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data');
-const RECORDS_DIR = path.join(DATA_DIR, 'records');
 
-// ensure directories exist
-await fs.mkdir(RECORDS_DIR, { recursive: true });
+const dbCache = new Map();
 
-const adapter = new FolderAdapter(RECORDS_DIR);
+export async function getDb(token = 'default') {
+    if (dbCache.has(token)) {
+        return dbCache.get(token);
+    }
 
-export const db = new Low(adapter, { records: [] });
-await db.read();
+    const recordsDir = path.join(DATA_DIR, token, 'records');
+
+    // ensure directories exist
+    await fs.mkdir(recordsDir, { recursive: true });
+
+    const adapter = new FolderAdapter(recordsDir);
+    const db = new Low(adapter, { records: [] });
+    await db.read();
+
+    dbCache.set(token, db);
+    return db;
+}

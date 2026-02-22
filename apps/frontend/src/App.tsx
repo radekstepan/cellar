@@ -18,11 +18,40 @@ export function App() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isLogVisible, setIsLogVisible] = useState(true);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [tables, setTables] = useState<string[]>([]);
+    const [activeToken, setActiveToken] = useState<string>('default');
 
+    // Fetch available tables on mount
     useEffect(() => {
+        fetch('/api/tables')
+            .then(r => r.json())
+            .then(fetchedTables => {
+                setTables(fetchedTables);
+                // Simple state init: check URL params, else check localStorage, else take first table
+                const params = new URLSearchParams(window.location.search);
+                const urlToken = params.get('token');
+                if (urlToken && fetchedTables.includes(urlToken)) {
+                    setActiveToken(urlToken);
+                } else {
+                    const savedToken = localStorage.getItem('activeToken');
+                    if (savedToken && fetchedTables.includes(savedToken)) {
+                        setActiveToken(savedToken);
+                    } else if (fetchedTables.length > 0) {
+                        setActiveToken(fetchedTables[0]);
+                    }
+                }
+            })
+            .catch(err => console.error('Failed to load tables:', err));
+    }, []);
+
+    // Load schema and records when activeToken changes
+    useEffect(() => {
+        if (!activeToken) return;
+
+        // Use the activeToken when querying endpoints
         Promise.all([
-            fetch('/api/schema').then(r => r.json()),
-            fetch('/api/records').then(r => r.json())
+            fetch(`/api/${activeToken}/schema`).then(r => r.json()),
+            fetch(`/api/${activeToken}/records`).then(r => r.json())
         ]).then(([fetchedSchema, fetchedRecords]) => {
             setSchema(fetchedSchema);
             setRecords(fetchedRecords);
@@ -36,6 +65,9 @@ export function App() {
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'RECORD_UPDATED') {
+                    // Only process updates for the currently active table
+                    if (data.token !== activeToken) return;
+
                     setRecords(prev => {
                         const updated = [...prev];
                         const index = updated.findIndex(r => r.id === data.record.id);
@@ -55,11 +87,11 @@ export function App() {
         return () => {
             ws.close();
         };
-    }, []);
+    }, [activeToken]);
 
     const handleUpdateRecord = useCallback(async (id: string, field: string, value: string) => {
         try {
-            await fetch(`/api/records/${id}`, {
+            await fetch(`/api/${activeToken}/records/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ [field]: value })
@@ -67,7 +99,7 @@ export function App() {
         } catch (e) {
             console.error('Failed to update record:', e);
         }
-    }, []);
+    }, [activeToken]);
 
     const filteredRecords = useMemo(
         () =>
@@ -108,8 +140,25 @@ export function App() {
 
     const liveCount = records.filter((r) => r.isLive).length;
 
+    const handleSelectionChange = (token: string) => {
+        setActiveToken(token);
+        localStorage.setItem('activeToken', token);
+        const url = new URL(window.location.href);
+        url.searchParams.set('token', token);
+        window.history.pushState({}, '', url);
+    };
+
     if (!schema) {
         return <div className="flex h-screen items-center justify-center bg-canvas text-ink">Loading...</div>;
+    }
+
+    if (schema.error) {
+        return (
+            <div className="flex h-screen flex-col items-center justify-center bg-canvas text-ink gap-4">
+                <div className="text-xl font-semibold">Error Loading Table</div>
+                <div className="text-sm text-ink-tertiary">{schema.error}</div>
+            </div>
+        );
     }
 
     return (
@@ -131,6 +180,9 @@ export function App() {
                     triggerAgentAction={triggerAgentAction}
                     handleSync={handleSync}
                     isSyncing={isSyncing}
+                    tables={tables}
+                    activeToken={activeToken}
+                    onSelectionChange={handleSelectionChange}
                 />
 
                 {/* View Content */}
