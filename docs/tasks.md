@@ -9,7 +9,7 @@ Support an architecture where an AI agent operates within a Docker container to 
 - [x] look if there is a nodejs library we could use for maintaining the local json database instead of hardcoding the logic
 - [x] need to support mutliple tables and each one has a unique identifier
 - [x] add unit and integration tests for the whole app
-- [ ] use a better nodejs server with strict typing (joi?)
+- [x] use a better nodejs server with strict typing (joi?)
 - [ ] how do you add how the workflow is defined? A task is at which stage?
 - [ ] copy RedactSolo workflow and use it as an "example" of what needs to be working
 - [ ] add idle time on Docker container
