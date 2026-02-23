@@ -29,6 +29,15 @@ While you should primarily use the CLI, you can also use the local Express serve
 - `POST /api/:table/records`: Create a new record for a table.
 - `PUT /api/:table/records/:id`: Update specific fields.
 
+### 4. Application Lifecycle
+You can manage the application using the scripts in the `bin/` directory:
+- `bin/start`: Starts the application via Docker.
+- `bin/stop`: Stops the application.
+- `bin/status`: Checks if the application is currently running.
+- `bin/rebuild`: Rebuilds the Docker container and starts it.
+
+Alternatively, for local development outside of Docker, use `yarn dev` from the root directory.
+
 ## 🛠️ Codebase Rules
 
 - **Clean UI**: Maintain the premium "canvas" aesthetic using Tailwind.

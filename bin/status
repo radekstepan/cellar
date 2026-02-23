@@ -5,9 +5,9 @@
 cd "$(dirname "$0")/.."
 
 if curl -s http://localhost:3001/api/schema >/dev/null; then
-  echo "STATUS: RUNNING"
-  echo "The application is currently active at http://localhost:3001"
+  echo "Running."
 else
-  echo "STATUS: STOPPED"
-  echo "The container or server is not currently responding."
+  echo "Stopped."
+  echo ""
+  echo "Suggestion: Run 'bin/start' to start via Docker, or 'yarn dev' to start locally."
 fi

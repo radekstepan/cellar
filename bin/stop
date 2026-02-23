@@ -4,8 +4,15 @@
 # Go to the root of the project
 cd "$(dirname "$0")/.."
 
-echo "Stopping the application..."
-docker-compose down --remove-orphans
+output=$(docker-compose down --remove-orphans 2>&1)
+if [ $? -ne 0 ]; then
+  echo "Failed to stop."
+  echo ""
+  echo "Details:"
+  echo "$output"
+  echo ""
+  echo "Suggestion: Ensure Docker is running. You may need to restart the Docker daemon."
+  exit 1
+fi
 
-echo "SUCCESS: Container successfully stopped."
-echo "STATUS: STOPPED"
+echo "Stopped."

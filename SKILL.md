@@ -50,6 +50,16 @@ cellar create <table> '<json_fields>'
 *Example:* `cellar create outreach '{"target": "Acme Corp", "status": "Triage"}'`
 Creates a brand new record and generates a unique ID if one is not provided.
 
+### 5. Application Lifecycle
+
+```bash
+bin/status
+bin/start
+bin/stop
+bin/rebuild
+```
+Use these commands to check the status, start, stop, or rebuild the application using Docker, if necessary for verification.
+
 ## Guidelines
 
 - All commands return JSON to standard out.

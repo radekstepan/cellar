@@ -13,5 +13,5 @@ Support an architecture where an AI agent operates within a Docker container to 
 - [ ] how do you add how the workflow is defined? A task is at which stage?
 - [ ] copy RedactSolo workflow and use it as an "example" of what needs to be working
 - [ ] add idle time on Docker container
-- [ ] improve the start/stop/status commands. Show just simple responses, only show details if something goes wrong
+- [x] improve the start/stop/status commands. Show just simple responses, only show details if something goes wrong
 - [ ] setup mutagen and core tunnel so we can observe the container in VPS

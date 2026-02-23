@@ -4,20 +4,28 @@
 # Go to the root of the project
 cd "$(dirname "$0")/.."
 
-echo "Starting the application..."
-docker-compose up -d --remove-orphans
+output=$(docker-compose up -d --remove-orphans 2>&1)
+if [ $? -ne 0 ]; then
+  echo "Failed to start."
+  echo ""
+  echo "Details:"
+  echo "$output"
+  echo ""
+  echo "Suggestion: Ensure Docker is running. Alternatively, run locally without Docker using 'yarn dev'."
+  exit 1
+fi
 
-echo "Waiting for server to respond..."
-for i in {1..5}; do
+for i in {1..7}; do
   if curl -s http://localhost:3001/api/schema >/dev/null; then
-    echo "SUCCESS: Container successfully started."
-    echo "STATUS: RUNNING"
-    echo "Application and API are available at http://localhost:3001"
+    echo "Started."
     exit 0
   fi
   sleep 1
 done
 
-echo "ERROR: Failed to start the container or server isn't responding."
-echo "STATUS: STOPPED"
+echo "Failed to start."
+echo ""
+echo "Details: The server did not respond at http://localhost:3001 within 7 seconds."
+echo ""
+echo "Suggestion: Check if port 3001 is already in use by another application, or view 'docker-compose logs' for more details."
 exit 1
